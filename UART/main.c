@@ -59,6 +59,36 @@ Data Stack size         : 256
 #define DATA_REGISTER_EMPTY (1<<UDRE)
 #define RX_COMPLETE (1<<RXC)
 
+
+#define        DHT_DATA_IN    PINC.2  
+#define        DHT_DATA_OUT    PORTC.2            
+#define        DHT_DDR_DATA    DDRC.2 
+#define DDROUT        1 
+#define DDRIN        0 
+#define DHT_ER      0 
+#define DHT_OK      1 
+#define DHT_Temp    0 
+#define DHT_RH      1 
+#define ADC_VREF_TYPE 0xE0 
+
+typedef  signed          char int8_t; 
+typedef  signed            int int16_t; 
+typedef  signed long      int int32_t; 
+
+/*    Kieu So Nguyen Khong Dau */ 
+typedef  unsigned        char uint8_t; 
+typedef  unsigned            int  uint16_t; 
+typedef  unsigned long    int  uint32_t; 
+/*    Kieu So Thuc */ 
+typedef  float            float32_t; 
+uint8_t nhiet=0;
+uint8_t am=0; 
+
+uint8_t buffer[5]={0,0,0,0,0}; 
+
+uint8_t select = 0;
+//------------------------------------------------------// 
+
 // USART Receiver buffer
 #define RX_BUFFER_SIZE 16
 char rx_buffer[RX_BUFFER_SIZE];
@@ -171,9 +201,63 @@ else
 
 // Standard Input/Output functions
 #include <stdio.h>
+//_-----------------------------------------------------//  Lay du lieu tu DHT11 
+uint8_t DHT_GetTemHumi () 
+{ 
+    uint8_t ii,i,checksum; 
+    DHT_DDR_DATA=DDROUT;  // set la cong ra 
+    DHT_DATA_OUT=1; 
+    delay_ms(50); 
+    DHT_DATA_OUT=0; 
+    delay_ms(25); // it nhat 18ms 
+    DHT_DATA_OUT=1;
+    delay_us(10);  
+    DHT_DDR_DATA=DDRIN; 
+    delay_us(60); 
+    if(DHT_DATA_IN)return DHT_ER ; 
+    else while(!(DHT_DATA_IN));    //Doi DaTa len 1 
+    delay_us(60); 
+    if(!DHT_DATA_IN)return DHT_ER; 
+    else while((DHT_DATA_IN));    //Doi Data ve 0 
+    //Bat dau doc du lieu 
+    for(i=0;i<5;i++) 
+    { 
+        for(ii=0;ii<8;ii++) 
+        {    
+        while((!DHT_DATA_IN));//Doi Data len 1 
+        delay_us(30); 
+        if(DHT_DATA_IN) 
+            { 
+            buffer[i]|=(1<<(7-ii)); 
+            while((DHT_DATA_IN));//Doi Data xuong 0 
+            } 
+        } 
+    } 
+    //Tinh toan check sum 
+    checksum=buffer[0]+buffer[1]+buffer[2]+buffer[3]; 
+    //Kiem tra check sum
+    DHT_DDR_DATA=DDROUT;
+    DHT_DATA_OUT=0;
+    delay_ms(10); 
+    if((checksum)!=buffer[4])return DHT_ER; 
+    //Lay du lieu    
+    return(buffer[2]); 
+    /*
+      if (select==DHT_Temp) 
+      {    //Return the value has been choosen 
+            return(buffer[2]); 
+      } 
+      if(select==DHT_RH) 
+      { 
+            return(buffer[0]+buffer[2]); 
+      } 
+    return DHT_OK;  */
+    
+} 
 
+//--------------------------------------------------------------// 
 // Declare your global variables here
-char c;
+//char c;
 void main(void)
 {
 // Declare your local variables here
@@ -250,6 +334,7 @@ TIMSK=0x00;
 // USART Transmitter: On
 // USART Mode: Asynchronous
 // USART Baud Rate: 9600
+
 UCSRA=0x00;
 /* Enable receiver and transmitter */
 UCSRB=0xD8;
@@ -283,14 +368,14 @@ TWCR=0x00;
 #asm("sei")
 
     puts("AT\r\n");  
-    delay_ms(1000);
+    delay_ms(100);
 
     puts("AT+CWMODE=1\r\n"); 
     delay_ms(100);
 
-    puts("AT+CWJAP=\"AN TAM\",\"27101997\"\r\n");
-    delay_ms(2000);
-
+    puts("AT+CWJAP=\"ttt\",\"12345678\"\r\n");
+    delay_ms(1000);
+    //c = 'a';
 while (1)
       {
       // Place your code here   
@@ -303,16 +388,40 @@ while (1)
        delay_ms(500);  
        */
       // c = getchar();
-      // putchar(c);
-
-      puts("AT+CIPSTART=\"TCP\",\"192.168.1.7\",8888\r\n");
+      // putchar(c); 
+      //delay_ms(200);
+       
+      
+      delay_ms(200);
+      //printf("nhiet do la %d\n",nhiet);
+      puts("AT+CIPSTART=\"TCP\",\"192.168.43.22\",8888\r\n");
       delay_ms(100);    
-      puts("AT+CIPSEND=3\r\n");    
-      delay_ms(500);  
-      puts("1\r\n");
+      puts("AT+CIPSEND=11\r\n");    
+      delay_ms(200);     
+      //select = 1;
+      //am= DHT_GetDoam();
+      //delay_ms(2000);   
+      //select = DHT_Temp;
+      //nhiet= DHT_GetTemHumi(); 
+      //am = buffer[0];
+      DHT_GetTemHumi();
+      printf("n+%d;%d\n\r",buffer[0],buffer[2]);
+      /* 
+      if(c == 'n'){ 
+      nhiet= DHT_GetTemHumi(DHT_Temp);    
+      printf("n+%d\n\r",nhiet);
+      c = 'a';              
+      }
+      else if(c == 'a'){
+      //puts("1\r\n"); 
+      nhiet= DHT_GetTemHumi(DHT_Temp);    
+      printf("a+%d\n\r",nhiet); 
+      c = 'n';
+      }   
+      */
     //c = getchar();
     // putchar(c);
-      delay_ms(1000);
+      delay_ms(500);
         
       }
 }

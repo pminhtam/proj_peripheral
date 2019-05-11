@@ -1,8 +1,9 @@
 RAM Allocation
 Variable                                                          Address   Size
 --------------------------------------------------------------------------------
-rx_buffer                                                         0x01CC      16
-tx_buffer                                                         0x01DC      16
+buffer                                                            0x01C8       5
+rx_buffer                                                         0x01CD      16
+tx_buffer                                                         0x01DD      16
 
 EEPROM Allocation
 Variable                                                          Address   Size
@@ -11,11 +12,13 @@ Variable                                                          Address   Size
 Register Allocation
 Variable                                                          Register  Size
 --------------------------------------------------------------------------------
-rx_wr_index                                                       R5           1
-rx_rd_index                                                       R4           1
-rx_counter                                                        R7           1
+nhiet                                                             R5           1
+am                                                                R4           1
+select                                                            R7           1
+rx_wr_index                                                       R6           1
+rx_rd_index                                                       R9           1
+rx_counter                                                        R8           1
 rx_buffer_overflow                                                R2.0      1bit
-tx_wr_index                                                       R6           1
-tx_rd_index                                                       R9           1
-tx_counter                                                        R8           1
-c                                                                 R11          1
+tx_wr_index                                                       R11          1
+tx_rd_index                                                       R10          1
+tx_counter                                                        R13          1
